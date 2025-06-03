@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Local Library",
+    "description": "A quiet and welcoming space to relax or study.",
+    "location": "123 Library Lane",
+    "tag": "Library",
+    "image_path": "placeholder.png"
+  },
+  {
+    "name": "Community Centre",
+    "description": "Support groups, free tea/coffee and workshops for all.",
+    "location": "456 Unity Street",
+    "tag": "Community",
+    "image_path": "placeholder.png"
+  },
+  {
+    "name": "Youth Hub",
+    "description": "A safe space for teens with activities and mentors.",
+    "location": "789 Youth Ave",
+    "tag": "Youth",
+    "image_path": "placeholder.png"
+  }
+]

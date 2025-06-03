@@ -1,0 +1,1 @@
+[["Emergency Services (999)", "tel:999"], ["NHS (111)", "tel:111"], ["Samaritans", "https://www.samaritans.org"], ["Andy's Man Club", "https://andysmanclub.co.uk"], ["NHS Website", "https://www.nhs.uk"], ["HM Coastguard", "tel:112"], ["NHS Mental Health", "https://www.nhs.uk/mental-health/"]]

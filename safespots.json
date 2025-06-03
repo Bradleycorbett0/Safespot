@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "name": "Allerton Library",
+    "description": "Free WiFi, computers and accessible facilities",
+    "tag": "Library",
+    "location": "Allerton Rd, Liverpool L18 6HG"
+  },
+  {
+    "name": "St Johns Gardens",
+    "description": "Quiet public garden",
+    "tag": "General",
+    "location": "St Johns Gardens, Liverpool"
+  },
+  {
+    "name": "Whitechapel Centre",
+    "description": "Langsdale St, Liverpool",
+    "tag": "General",
+    "location": "Whitechapel Centre, Langsdale St, Liverpool L3 8DT"
+  },
+  {
+    "description": "librart",
+    "location": ""
+  },
+  {
+    "description": "library",
+    "location": "liverpool1"
+  }
+]

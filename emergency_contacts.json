@@ -1,37 +1,26 @@
 [
   {
-    "label": "Emergency Services (999)",
-    "type": "call",
-    "value": "999"
+    "name": "Emergency Services (999)",
+    "phone": "999"
   },
   {
-    "label": "NHS (111)",
-    "type": "call",
-    "value": "111"
+    "name": "NHS (111)",
+    "phone": "111"
   },
   {
-    "label": "Samaritans",
-    "type": "web",
-    "value": "https://www.samaritans.org"
+    "name": "Samaritans",
+    "phone": "116123"
   },
   {
-    "label": "Andy's Man Club",
-    "type": "web",
-    "value": "https://andysmanclub.co.uk"
+    "name": "Andy's Man Club",
+    "phone": "https://andysmanclub.co.uk"
   },
   {
-    "label": "NHS Website",
-    "type": "web",
-    "value": "https://www.nhs.uk"
+    "name": "NHS Website",
+    "phone": "https://www.nhs.uk"
   },
   {
-    "label": "HM Coastguard",
-    "type": "web",
-    "value": "https://www.gov.uk/government/organisations/maritime-and-coastguard-agency"
-  },
-  {
-    "label": "NHS Mental Health",
-    "type": "web",
-    "value": "https://www.nhs.uk/mental-health/"
+    "name": "NHS Mental Health",
+    "phone": "https://www.nhs.uk/mental-health/"
   }
 ]

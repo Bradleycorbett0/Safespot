@@ -1,18 +1,18 @@
+import os
+import json
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.image import Image
+from kivy.uix.popup import Popup
+from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Color, Rectangle
-from kivy.uix.popup import Popup
-import json
-import os
 
-USERS_FILE = "users.json"
-Window.softinput_mode = 'resize'  # Ensure layout resizes with keyboard
+USERS_FILE = "/storage/emulated/0/safespot/users.json"
+Window.softinput_mode = 'resize'
 
 class LoginScreen(Screen):
     def __init__(self, **kwargs):
@@ -21,7 +21,7 @@ class LoginScreen(Screen):
 
     def build_ui(self):
         with self.canvas.before:
-            Color(1, 0.98, 0.94, 1)  # soft warm background
+            Color(1, 0.98, 0.94, 1)
             self.bg_rect = Rectangle(pos=self.pos, size=self.size)
         self.bind(size=self.update_background, pos=self.update_background)
 
@@ -29,10 +29,10 @@ class LoginScreen(Screen):
 
         layout = BoxLayout(
             orientation='vertical',
-            spacing=25,
+            spacing=20,
             padding=30,
             size_hint=(0.9, 0.6),
-            pos_hint={"center_x": 0.5, "center_y": 0.7}  # raised to stay above keyboard
+            pos_hint={"center_x": 0.5, "center_y": 0.7}
         )
 
         layout.add_widget(Label(
@@ -44,7 +44,7 @@ class LoginScreen(Screen):
         ))
 
         self.email_input = TextInput(
-            hint_text="Email or phone",
+            hint_text="Email or Phone",
             multiline=False,
             font_size='22sp',
             size_hint=(1, None),
@@ -58,14 +58,6 @@ class LoginScreen(Screen):
             size_hint=(1, None),
             height=95
         )
-
-        # Prefill if saved
-        if os.path.exists(USERS_FILE):
-            with open(USERS_FILE, "r") as f:
-                users = json.load(f)
-                if users:
-                    self.email_input.text = users[-1].get("email", "")
-                    self.password_input.text = users[-1].get("password", "")
 
         layout.add_widget(self.email_input)
         layout.add_widget(self.password_input)
@@ -110,7 +102,7 @@ class LoginScreen(Screen):
         password = self.password_input.text.strip()
         users = self.load_users()
         if any(user.get("email") == email and user.get("password") == password for user in users):
-            self.manager.current = "home"
+            self.manager.current = "permission"
         else:
             self.show_popup("Login Failed", "Incorrect email or password.")
 
@@ -118,17 +110,21 @@ class LoginScreen(Screen):
         email = self.email_input.text.strip()
         password = self.password_input.text.strip()
         users = self.load_users()
+
         if any(user.get("email") == email for user in users):
             self.show_popup("Error", "Account already exists.")
             return
+
         users.append({'email': email, 'password': password})
         self.save_users(users)
         self.show_popup("Success", "Account created.")
 
     def show_popup(self, title, message):
-        popup = Popup(title=title,
-                      content=Label(text=message),
-                      size_hint=(0.75, 0.4))
+        popup = Popup(
+            title=title,
+            content=Label(text=message),
+            size_hint=(0.75, 0.4)
+        )
         popup.open()
 
     def load_users(self):

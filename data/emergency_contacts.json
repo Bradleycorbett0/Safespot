@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Emergency Services (999)",
+    "type": "General",
+    "value": "tel:999"
+  },
+  {
+    "name": "NHS (111)",
+    "type": "General",
+    "value": "tel:111"
+  },
+  {
+    "name": "Samaritans",
+    "type": "Mental",
+    "value": "https://www.samaritans.org"
+  },
+  {
+    "name": "Andy's Man Club",
+    "type": "Mental",
+    "value": "https://andysmanclub.co.uk"
+  },
+  {
+    "name": "NHS Website",
+    "type": "General",
+    "value": "https://www.nhs.uk"
+  },
+  {
+    "name": "NHS Mental Health",
+    "type": "Mental",
+    "value": "https://www.nhs.uk/mental-health/"
+  }
+]
