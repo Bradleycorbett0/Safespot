@@ -1,138 +1,142 @@
-import os
-import json
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
-from kivy.uix.image import Image
-from kivy.uix.popup import Popup
-from kivy.graphics import Color, Rectangle
+from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.scrollview import ScrollView
+from kivy.metrics import dp
 from kivy.core.window import Window
-from kivy.uix.floatlayout import FloatLayout
+import json
+import os
 
-USERS_FILE = "/storage/emulated/0/safespot/users.json"
-Window.softinput_mode = 'resize'
+
+# Make window auto-resize when keyboard opens
+try:
+    Window.softinput_mode = "pan"  # 'pan' moves content up when keyboard shows
+except Exception as e:
+    print("Keyboard resize mode not set:", e)
+
 
 class LoginScreen(Screen):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.build_ui()
+        super(LoginScreen, self).__init__(**kwargs)
 
-    def build_ui(self):
-        with self.canvas.before:
-            Color(1, 0.98, 0.94, 1)
-            self.bg_rect = Rectangle(pos=self.pos, size=self.size)
-        self.bind(size=self.update_background, pos=self.update_background)
+        # Background
+        self.background_color = (0.98, 0.95, 0.9, 1)
 
-        root = FloatLayout()
+        # Use a ScrollView to prevent hiding content
+        scroll = ScrollView(size_hint=(1, 1))
 
-        layout = BoxLayout(
-            orientation='vertical',
+        container = BoxLayout(
+            orientation="vertical",
+            padding=[40, 60, 40, 60],
             spacing=20,
-            padding=30,
-            size_hint=(0.9, 0.6),
-            pos_hint={"center_x": 0.5, "center_y": 0.7}
+            size_hint_y=None
+        )
+        container.bind(minimum_height=container.setter("height"))
+
+        # Title / logo
+        logo_label = Label(
+            text="[b]SafeSpot[/b]",
+            markup=True,
+            font_size="36sp",
+            color=(0, 0.4, 0.4, 1),
+            size_hint_y=None,
+            height=dp(60)
         )
 
-        layout.add_widget(Label(
-            text="Login to SafeSpot",
-            font_size='30sp',
-            size_hint=(1, None),
-            height=50,
-            color=(0.2, 0.2, 0.2, 1)
-        ))
+        # Subtitle
+        self.subtitle = Label(
+            text="Find safety. Feel supported.",
+            font_size="16sp",
+            color=(0.2, 0.2, 0.2, 1),
+            size_hint_y=None,
+            height=dp(30)
+        )
 
-        self.email_input = TextInput(
-            hint_text="Email or Phone",
+        # Username
+        self.username_input = TextInput(
+            hint_text="Username",
             multiline=False,
-            font_size='22sp',
-            size_hint=(1, None),
-            height=95
+            size_hint_y=None,
+            height=dp(50),
+            background_color=(1, 1, 1, 1),
+            foreground_color=(0, 0, 0, 1),
+            padding=[15, 15],
+            cursor_color=(0, 0.4, 0.4, 1)
         )
+
+        # Password
         self.password_input = TextInput(
             hint_text="Password",
             multiline=False,
             password=True,
-            font_size='22sp',
-            size_hint=(1, None),
-            height=95
+            size_hint_y=None,
+            height=dp(50),
+            background_color=(1, 1, 1, 1),
+            foreground_color=(0, 0, 0, 1),
+            padding=[15, 15],
+            cursor_color=(0, 0.4, 0.4, 1)
         )
 
-        layout.add_widget(self.email_input)
-        layout.add_widget(self.password_input)
-
-        login_btn = Button(
+        # Login button
+        self.login_button = Button(
             text="Login",
-            size_hint=(1, None),
-            height=65,
-            background_color=(0.2, 0.4, 0.2, 1),
-            font_size='20sp'
+            size_hint_y=None,
+            height=dp(50),
+            background_color=(0, 0.4, 0.4, 1),
+            color=(1, 1, 1, 1),
+            font_size="18sp",
+            bold=True
         )
-        login_btn.bind(on_press=self.handle_login)
-        layout.add_widget(login_btn)
+        self.login_button.bind(on_press=self.login)
 
-        register_btn = Button(
-            text="Register",
-            size_hint=(1, None),
-            height=65,
-            background_color=(0.25, 0.2, 0.35, 1),
-            font_size='20sp'
+        # Skip button
+        self.skip_button = Button(
+            text="Skip Login",
+            size_hint_y=None,
+            height=dp(50),
+            background_color=(0.1, 0.1, 0.1, 1),
+            color=(1, 1, 1, 1),
+            font_size="16sp"
         )
-        register_btn.bind(on_press=self.handle_register)
-        layout.add_widget(register_btn)
+        self.skip_button.bind(on_press=self.skip_login)
 
-        root.add_widget(layout)
+        # Add widgets
+        container.add_widget(logo_label)
+        container.add_widget(self.subtitle)
+        container.add_widget(self.username_input)
+        container.add_widget(self.password_input)
+        container.add_widget(self.login_button)
+        container.add_widget(self.skip_button)
 
-        logo = Image(
-            source="logo.png",
-            size_hint=(0.6, 0.25),
-            pos_hint={"center_x": 0.5, "y": 0.01}
-        )
-        root.add_widget(logo)
+        scroll.add_widget(container)
 
+        # Use anchor layout to center scroll area
+        root = AnchorLayout(anchor_x="center", anchor_y="center")
+        root.add_widget(scroll)
         self.add_widget(root)
 
-    def update_background(self, *args):
-        self.bg_rect.pos = self.pos
-        self.bg_rect.size = self.size
-
-    def handle_login(self, instance):
-        email = self.email_input.text.strip()
+    def login(self, instance):
+        username = self.username_input.text.strip()
         password = self.password_input.text.strip()
-        users = self.load_users()
-        if any(user.get("email") == email and user.get("password") == password for user in users):
-            self.manager.current = "permission"
-        else:
-            self.show_popup("Login Failed", "Incorrect email or password.")
 
-    def handle_register(self, instance):
-        email = self.email_input.text.strip()
-        password = self.password_input.text.strip()
-        users = self.load_users()
-
-        if any(user.get("email") == email for user in users):
-            self.show_popup("Error", "Account already exists.")
+        if not username or not password:
+            self.subtitle.text = "[color=ff0000]Please fill in both fields[/color]"
+            self.subtitle.markup = True
             return
 
-        users.append({'email': email, 'password': password})
-        self.save_users(users)
-        self.show_popup("Success", "Account created.")
+        data_file = os.path.join(os.path.expanduser("~"), "safespot_userdata.json")
+        data = {"username": username}
 
-    def show_popup(self, title, message):
-        popup = Popup(
-            title=title,
-            content=Label(text=message),
-            size_hint=(0.75, 0.4)
-        )
-        popup.open()
+        try:
+            with open(data_file, "w") as f:
+                json.dump(data, f)
+        except Exception as e:
+            print(f"Error saving user data: {e}")
 
-    def load_users(self):
-        if os.path.exists(USERS_FILE):
-            with open(USERS_FILE, "r") as f:
-                return json.load(f)
-        return []
+        self.manager.current = "home"
 
-    def save_users(self, users):
-        with open(USERS_FILE, "w") as f:
-            json.dump(users, f, indent=2)
+    def skip_login(self, instance):
+        self.manager.current = "home"

@@ -1,6 +1,5 @@
-import os
-import json
-
+import webbrowser
+import requests
 from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -11,12 +10,14 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.graphics import Color, Rectangle
 
-EVENTS_FILE = "events.json"
+FIREBASE_URL = "https://safespot-c5e02-default-rtdb.europe-west1.firebasedatabase.app"
+
 
 class EventsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # Background
         with self.canvas.before:
             Color(1, 0.98, 0.94, 1)
             self.bg_rect = Rectangle(pos=self.pos, size=self.size)
@@ -24,22 +25,29 @@ class EventsScreen(Screen):
 
         self.layout = BoxLayout(orientation='vertical', padding=15, spacing=10)
 
+        # Scrollable list
         self.scrollview = ScrollView(size_hint=(1, 0.75))
-        self.content = GridLayout(cols=1, size_hint_y=None, padding=[10, 10], spacing=20)
+        self.content = GridLayout(cols=1, size_hint_y=None, spacing=20, padding=[10, 10])
         self.content.bind(minimum_height=self.content.setter('height'))
         self.scrollview.add_widget(self.content)
         self.layout.add_widget(self.scrollview)
 
+        # Button row (Add + Maps)
         button_bar = BoxLayout(size_hint=(1, 0.1), spacing=10)
-        add_btn = Button(text='Add', background_color=(0.3, 0.6, 0.4, 1))
-        del_btn = Button(text='Delete', background_color=(0.8, 0.4, 0.4, 1))
+        add_btn = Button(text='Add', background_color=(0.1, 0.3, 0.2, 1))
+        maps_btn = Button(text='Open Google Maps', background_color=(0.2, 0.4, 0.6, 1))
         add_btn.bind(on_press=self.open_add_popup)
-        del_btn.bind(on_press=self.open_delete_popup)
+        maps_btn.bind(on_press=self.open_google_maps)
         button_bar.add_widget(add_btn)
-        button_bar.add_widget(del_btn)
+        button_bar.add_widget(maps_btn)
         self.layout.add_widget(button_bar)
 
-        back_btn = Button(text='Back to Home', size_hint=(1, 0.1), background_color=(0.95, 0.6, 0.4, 1))
+        # Back button
+        back_btn = Button(
+            text='Back to Home',
+            size_hint=(1, 0.1),
+            background_color=(0.2, 0.1, 0.05, 1)
+        )
         back_btn.bind(on_press=lambda x: setattr(self.manager, 'current', 'home'))
         self.layout.add_widget(back_btn)
 
@@ -52,93 +60,119 @@ class EventsScreen(Screen):
     def on_pre_enter(self, *args):
         self.refresh_events()
 
+    # --- Firebase functions ---
+    def fetch_events_from_firebase(self):
+        try:
+            response = requests.get(f"{FIREBASE_URL}/events.json")
+            if response.ok and response.json():
+                data = response.json()
+                return [{"id": k, "text": v["text"]} for k, v in data.items() if isinstance(v, dict)]
+            return []
+        except Exception as e:
+            print("Error fetching events:", e)
+            return []
+
+    def add_event_to_firebase(self, text):
+        try:
+            data = {"text": text}
+            response = requests.post(f"{FIREBASE_URL}/events.json", json=data)
+            return response.ok
+        except Exception as e:
+            print("Error adding event:", e)
+            return False
+
+    def delete_event_from_firebase(self, event_id):
+        try:
+            response = requests.delete(f"{FIREBASE_URL}/events/{event_id}.json")
+            return response.ok
+        except Exception as e:
+            print("Error deleting event:", e)
+            return False
+
     def refresh_events(self):
         self.content.clear_widgets()
-        events = self.load_events()
-        for event in events:
-            label = Label(
-                text=event,
-                font_size='22sp',
+        events = self.fetch_events_from_firebase()
+
+        if not events:
+            self.content.add_widget(Label(
+                text="No events yet.",
+                font_size='20sp',
                 color=(0.2, 0.2, 0.2, 1),
                 size_hint_y=None,
-                halign='left',
-                valign='middle',
-                text_size=(self.width - 60, None),
-                height=0  # Auto-size
-            )
-            label.bind(
-                texture_size=lambda inst, size: setattr(inst, 'height', max(size[1], 50))
-            )
-            self.content.add_widget(label)
+                height=50
+            ))
+            return
 
+        for event in events:
+            row = BoxLayout(orientation='horizontal', size_hint_y=None, height=100, spacing=10)
+
+            lbl = Label(
+                text=event['text'],
+                font_size='18sp',
+                color=(0.1, 0.1, 0.1, 1),
+                halign='left',
+                valign='middle'
+            )
+            lbl.bind(width=lambda inst, val: setattr(inst, 'text_size', (val - 40, None)))
+            lbl.bind(texture_size=lambda inst, val: setattr(inst, 'height', max(val[1] + 10, 80)))
+
+            delete_btn = Button(
+                text="Delete",
+                size_hint=(None, 1),
+                width=100,
+                background_color=(0.8, 0.3, 0.3, 1),
+                color=(1, 1, 1, 1)
+            )
+            delete_btn.bind(on_release=lambda btn, i=event["id"]: self.delete_and_refresh(i))
+
+            row.add_widget(lbl)
+            row.add_widget(delete_btn)
+            self.content.add_widget(row)
+
+    def delete_and_refresh(self, event_id):
+        if self.delete_event_from_firebase(event_id):
+            self.refresh_events()
+        else:
+            self.show_popup("Error", "Failed to delete event.")
+
+    # --- Add event popup ---
     def open_add_popup(self, instance):
         box = BoxLayout(orientation='vertical', padding=10, spacing=10)
-
         input_field = TextInput(
-            hint_text='Enter new event',
+            hint_text='Enter new event details (or location name)',
             multiline=True,
             size_hint_y=0.7,
-            font_size='20sp',
-            background_color=(1, 0.98, 0.94, 1),
-            foreground_color=(0, 0, 0, 1),
-            padding=[10, 10, 10, 10]
+            font_size='18sp'
         )
         box.add_widget(input_field)
 
-        def save_event(instance):
+        def save_event(_):
             new_event = input_field.text.strip()
             if new_event:
-                events = self.load_events()
-                events.append(new_event)
-                self.save_events(events)
-                self.refresh_events()
+                if self.add_event_to_firebase(new_event):
+                    self.refresh_events()
+                else:
+                    self.show_popup("Error", "Failed to save event.")
             popup.dismiss()
 
-        save_btn = Button(text="Save", background_color=(0.3, 0.6, 0.4, 1), size_hint_y=0.3)
+        save_btn = Button(text="Save", background_color=(0.1, 0.4, 0.2, 1))
         save_btn.bind(on_press=save_event)
         box.add_widget(save_btn)
 
         popup = Popup(title="Add Event", content=box, size_hint=(0.9, 0.5))
         popup.open()
 
-    def open_delete_popup(self, instance):
-        box = BoxLayout(orientation='vertical', padding=10, spacing=10)
+    # --- Google Maps ---
+    def open_google_maps(self, instance):
+        """
+        Opens Google Maps. If you later store lat/lon or location name,
+        you can change this to open directions to a specific spot.
+        """
+        try:
+            webbrowser.open("https://www.google.com/maps")
+        except Exception as e:
+            self.show_popup("Error", f"Could not open Maps: {e}")
 
-        input_field = TextInput(
-            hint_text='Enter exact event text to delete',
-            multiline=False,
-            size_hint_y=None,
-            height=40,
-            font_size='18sp',
-            background_color=(1, 0.98, 0.94, 1),
-            foreground_color=(0, 0, 0, 1),
-            padding=[10, 10, 10, 10]
-        )
-        box.add_widget(input_field)
-
-        def delete_event(instance):
-            to_delete = input_field.text.strip()
-            if to_delete:
-                events = self.load_events()
-                if to_delete in events:
-                    events.remove(to_delete)
-                    self.save_events(events)
-                    self.refresh_events()
-            popup.dismiss()
-
-        delete_btn = Button(text="Delete", background_color=(0.8, 0.4, 0.4, 1), size_hint_y=0.3)
-        delete_btn.bind(on_press=delete_event)
-        box.add_widget(delete_btn)
-
-        popup = Popup(title="Delete Event", content=box, size_hint=(0.9, 0.4))
+    def show_popup(self, title, message):
+        popup = Popup(title=title, content=Label(text=message), size_hint=(0.8, 0.4))
         popup.open()
-
-    def load_events(self):
-        if os.path.exists(EVENTS_FILE):
-            with open(EVENTS_FILE, "r") as f:
-                return json.load(f)
-        return []
-
-    def save_events(self, events):
-        with open(EVENTS_FILE, "w") as f:
-            json.dump(events, f, indent=2)

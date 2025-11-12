@@ -1,0 +1,78 @@
+#:kivy 2.3.1
+
+<SpotsScreen>:
+    name: "spots"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: "Select a City"
+            size_hint_y: None
+            height: 40
+            font_size: "20sp"
+            color: 0,0,0,1
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+
+            BoxLayout:
+                id: spots_container
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 8
+
+
+<SpotsListScreen>:
+    name: "spots_list"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: root.selected_city.replace("_"," ").title()
+            size_hint_y: None
+            height: 40
+            font_size: "20sp"
+            color: 0,0,0,1
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+
+            BoxLayout:
+                id: city_spots_container
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 8
+
+
+<SpotViewScreen>:
+    name: "spot_view"
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 20
+
+        Label:
+            id: spot_info
+            markup: True
+            color: 0,0,0,1
+            text_size: self.width, None
+            halign: "center"
+            valign: "top"
+            size_hint_y: None
+            height: self.texture_size[1] + 40
+
+        Button:
+            text: "Back"
+            size_hint_y: None
+            height: 50
+            on_release:
+                app.root.transition.direction = "right"
+                app.root.current = "spots_list"

@@ -1,0 +1,40 @@
+{
+  "spots": {
+    "liverpool": {
+      "s01": {
+        "name": "Central Library",
+        "description": "Warm, free WiFi, safe."
+      },
+      "s02": {
+        "name": "Lime Street Station Concourse",
+        "description": "Public, staffed, sheltered."
+      },
+      "s03": {
+        "name": "Whitechapel Centre Day Service",
+        "description": "Food & support during open hours."
+      },
+      "s04": {
+        "name": "Liverpool One Public Seating",
+        "description": "Public benches with overnight CCTV."
+      }
+    },
+    "manchester": {
+      "s01": {
+        "name": "Piccadilly Gardens",
+        "description": "Public, central, open visibility."
+      },
+      "s02": {
+        "name": "Victoria Station Concourse",
+        "description": "Inside public concourse, CCTV."
+      },
+      "s03": {
+        "name": "Manchester Central Library",
+        "description": "Warm, free WiFi, quiet safe space."
+      },
+      "s04": {
+        "name": "Arndale Food Court Seating",
+        "description": "Indoor seating, busy & secure."
+      }
+    }
+  }
+}

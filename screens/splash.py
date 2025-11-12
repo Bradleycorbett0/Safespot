@@ -1,54 +1,34 @@
-from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import Screen
 from kivy.uix.image import Image
-from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.anchorlayout import AnchorLayout
 
-# Optional: Set a warm background color
-Window.clearcolor = (0.98, 0.94, 0.9, 1)  # Soft warm beige
 
 class SplashScreen(Screen):
-    def on_enter(self):
-        Clock.schedule_once(self.go_to_home, 2.5)
-
-    def go_to_home(self, *args):
-        self.manager.current = 'home'
-
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        layout = BoxLayout(orientation='vertical', spacing=20, padding=40)
+        super(SplashScreen, self).__init__(**kwargs)
 
-        # Big centered logo
+        # White background (guaranteed visible)
+        Window.clearcolor = (1, 1, 1, 1)
+
+        # Centered logo
+        layout = AnchorLayout(anchor_x='center', anchor_y='center')
+
+        # Use your logo file — put it in /storage/emulated/0/safespot/assets/
         logo = Image(
-            source='logo.png',
+            source="assets/safespot_logo.png",
+            size_hint=(0.6, 0.6),
             allow_stretch=True,
-            size_hint=(1, 0.5)
-        )
-
-        # Warm welcome label
-        welcome = Label(
-            text='Welcome to SafeSpot!',
-            font_size='28sp',
-            color=(0.2, 0.2, 0.2, 1)  # Dark brown text
         )
 
         layout.add_widget(logo)
-        layout.add_widget(welcome)
         self.add_widget(layout)
 
-class HomeScreen(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.add_widget(Label(text='Home Screen'))
+    def on_enter(self):
+        # Go to login after 2.5 seconds
+        Clock.schedule_once(self.switch_to_login, 2.5)
 
-class SafeSpotApp(App):
-    def build(self):
-        sm = ScreenManager()
-        sm.add_widget(SplashScreen(name='splash'))
-        sm.add_widget(HomeScreen(name='home'))
-        return sm
-
-if __name__ == '__main__':
-    SafeSpotApp().run()
+    def switch_to_login(self, dt):
+        self.manager.transition.direction = "left"
+        self.manager.current = "login"
