@@ -42,6 +42,11 @@ jobs:
           echo "package.name = safespot" >> buildozer.spec
           echo "package.domain = com.bradleycorbettjones" >> buildozer.spec
           echo "package.title = SafeSpot" >> buildozer.spec
+          export ANDROIDSDK=$HOME/android-sdk
+          export ANDROIDNDK=$HOME/android-sdk/ndk
+          export PATH=$ANDROIDSDK/cmdline-tools/bin:$ANDROIDSDK/platform-tools:$PATH
+          yes | $ANDROIDSDK/cmdline-tools/cmdline-tools/bin/sdkmanager \
+            --sdk_root=$ANDROIDSDK "build-tools;34.0.0" "platforms;android-33"
           buildozer android release
 
       - name: Upload artifacts
