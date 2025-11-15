@@ -13,29 +13,33 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          python3-pip python3-setuptools python3-wheel \
+          pkg-config libgl1-mesa-dev libgles2-mesa-dev \
+          libffi-dev libssl-dev git zip unzip openjdk-17-jdk
+
     - name: Install Buildozer
       run: |
-        pip install buildozer cython
+        pip install --upgrade pip
+        pip install cython buildozer
 
-    - name: Install Android SDK (FIXED VERSION)
+    - name: Install Android SDK (FINAL FIX)
       run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest
+        cd $HOME/android-sdk/cmdline-tools/latest
 
-        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O sdk.zip
-        unzip sdk.zip -d latest
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
+        unzip sdk.zip
 
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
             "platform-tools" "platforms;android-33" "build-tools;34.0.0"
 
@@ -43,7 +47,7 @@ jobs:
       run: |
         buildozer android release
 
-    - name: Upload artifacts
+    - name: Upload AAB artifact
       uses: actions/upload-artifact@v4
       with:
         name: safespot-aab
