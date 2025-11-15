@@ -2,53 +2,49 @@ name: Build SafeSpot App
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip git zip openjdk-17-jdk python3-setuptools python3-wheel unzip wget
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-      - name: Install Buildozer
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython virtualenv
+    - name: Install Buildozer
+      run: |
+        pip install buildozer cython
 
-      - name: Install Android SDK
-        run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O sdk.zip
-          unzip sdk.zip -d tools
+    - name: Install Android SDK (FIXED VERSION)
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
 
-          yes | $HOME/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          yes | $HOME/android-sdk/cmdline-tools/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+        wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O sdk.zip
+        unzip sdk.zip -d latest
+
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses --sdk_root=$HOME/android-sdk
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
             "platform-tools" "platforms;android-33" "build-tools;34.0.0"
 
-      - name: Build release (AAB)
-        run: |
-          export ANDROIDSDK=$HOME/android-sdk
-          export PATH=$ANDROIDSDK/platform-tools:$ANDROIDSDK/cmdline-tools/tools/bin:$PATH
+    - name: Build release (AAB)
+      run: |
+        buildozer android release
 
-          buildozer android release
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: safespot-builds
-          path: |
-            bin/*.apk
-            bin/*.aab
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: safespot-aab
+        path: bin/*.aab
