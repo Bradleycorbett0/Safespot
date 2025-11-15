@@ -31,12 +31,12 @@ jobs:
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Install Android SDK (FINAL FIX)
+    - name: Install Android SDK (2025 FIX)
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools/latest
         cd $HOME/android-sdk/cmdline-tools/latest
 
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk.zip
+        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O sdk.zip
         unzip sdk.zip
 
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
