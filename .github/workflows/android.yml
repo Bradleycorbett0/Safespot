@@ -34,8 +34,8 @@ jobs:
           python3-virtualenv \
           libssl-dev \
           libffi-dev \
-          libncursesw5 \
-          libncursesw5:i386
+          libncurses6 \
+          libncurses6:i386
 
         pip install --upgrade pip
         pip install cython buildozer
@@ -56,14 +56,13 @@ jobs:
     - name: Set ENV paths
       run: |
         echo "export ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "export ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
         echo "export PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
     - name: Build APK with Buildozer
       run: |
         buildozer android debug
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: safespot-apk
