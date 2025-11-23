@@ -34,23 +34,27 @@ jobs:
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
 
-        # Download commandline tools
+        # Download latest command line tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-        unzip tools.zip -d ./temp
+        unzip tools.zip -d extracted
 
-        # Correct layout
-        mkdir -p latest
-        mv temp/* latest/
+        # FIX: Move inner folder automatically regardless of layout
+        INNER=$(ls extracted)
+        mv extracted/$INNER latest
 
-        # Install tools
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        # Verify sdkmanager exists
+        ls -R latest/bin
+
+        # Install packages
+        yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
+        yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
+        yes | latest/bin/sdkmanager --licenses
 
     - name: Set ENV paths
       run: |
         echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
 
     - name: Build APK
       run: |
