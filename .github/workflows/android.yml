@@ -22,50 +22,38 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y \
-          python3-pip \
-          python3-setuptools \
-          python3-wheel \
-          python3-virtualenv \
-          git \
-          zip \
-          unzip \
-          openjdk-17-jdk \
-          build-essential \
-          libssl-dev \
-          libffi-dev \
-          libncurses5-dev \
-          libtinfo6
+          python3-pip python3-setuptools python3-wheel python3-virtualenv \
+          git zip unzip openjdk-17-jdk \
+          build-essential libssl-dev libffi-dev libncurses5-dev libtinfo6
 
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Install Android SDK (latest)
+    - name: Install Android SDK manually
       run: |
         mkdir -p $HOME/android-sdk
         cd $HOME/android-sdk
 
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-        unzip cmdtools.zip -d cmdline-tools
-
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd.zip
+        unzip cmd.zip -d cmdline-tools
         mkdir -p cmdline-tools/latest
-        mv cmdline-tools/cmdline-tools/* cmdline-tools/latest/
+        mv cmdline-tools/* cmdline-tools/latest/ || true
 
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
-        yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
-        sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
-          "platform-tools" \
-          "platforms;android-31" \
-          "build-tools;31.0.0"
+    - name: Set ENV paths
+      run: |
+        echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "ANDROIDNDK=$HOME/android-sdk/ndk-bundle" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/android-sdk/build-tools/33.0.2:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
 
     - name: Build APK
       run: |
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        export PATH=$ANDROID_SDK_ROOT/platform-tools:$PATH
         buildozer android debug
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: safespot-apk
