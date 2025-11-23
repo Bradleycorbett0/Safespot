@@ -34,7 +34,7 @@ jobs:
           libssl-dev \
           libffi-dev \
           libncurses5-dev \
-          libtinfo5
+          libtinfo6
 
         pip install --upgrade pip
         pip install cython buildozer
