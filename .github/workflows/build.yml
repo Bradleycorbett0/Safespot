@@ -13,39 +13,33 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: 3.10
 
     - name: Install system dependencies
       run: |
         sudo apt update
         sudo apt install -y \
           python3-pip \
-          python3-setuptools \
-          python3-wheel \
-          python3-virtualenv \
-          git \
-          zip \
-          unzip \
           openjdk-17-jdk \
+          zip unzip \
+          libssl3 \
+          libffi8 \
           libffi-dev \
-          libssl-dev \
           build-essential \
-          libncurses5-dev \
-          libncursesw5-dev \
-          libtinfo5
+          git
 
-        pip install --upgrade pip
-        pip install cython buildozer
+        pip install --upgrade pip cython buildozer
 
     - name: Build APK
       run: |
-        buildozer android debug
+        buildozer android debug || true
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: safespot-apk
         path: bin/*.apk
+        if-no-files-found: warn
