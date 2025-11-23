@@ -1,4 +1,4 @@
-name: Build APK with Buildozer
+name: Android APK Build
 
 on:
   push:
@@ -18,49 +18,52 @@ jobs:
       with:
         python-version: "3.10"
 
-    - name: Install system packages
+    - name: Install system dependencies
       run: |
         sudo apt update
         sudo apt install -y \
-          python3-pip python3-setuptools python3-wheel python3-virtualenv \
-          git zip unzip openjdk-17-jdk \
-          build-essential libssl-dev libffi-dev libncurses5-dev libtinfo6
+          python3-pip \
+          python3-setuptools \
+          python3-wheel \
+          python3-virtualenv \
+          git \
+          zip \
+          unzip \
+          openjdk-17-jdk \
+          build-essential \
+          libssl-dev \
+          libffi-dev \
+          libncurses5-dev \
+          libtinfo6
 
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Install Android SDK
+    - name: Install Android SDK + NDK (correct way)
       run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
+        mkdir -p $HOME/.buildozer/android/platform
 
-        # Download latest command line tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-        unzip tools.zip -d extracted
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+        unzip cmdtools.zip -d $HOME/.buildozer/android/platform/
 
-        # FIX: Move inner folder automatically regardless of layout
-        INNER=$(ls extracted)
-        mv extracted/$INNER latest
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        mv $HOME/.buildozer/android/platform/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
 
-        # Verify sdkmanager exists
-        ls -R latest/bin
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin
+        yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
 
-        # Install packages
-        yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
-        yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
-        yes | latest/bin/sdkmanager --licenses
+        sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;23.1.7779620"
 
-    - name: Set ENV paths
+    - name: Build APK with Buildozer
       run: |
-        echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-        echo "$HOME/android-sdk/build-tools/33.0.2" >> $GITHUB_PATH
+        export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROIDNDK=$ANDROIDSDK/ndk/23.1.7779620
+        export PATH=$PATH:$ANDROIDSDK/platform-tools
 
-    - name: Build APK
-      run: |
         buildozer android debug
 
-    - name: Upload APK
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: safespot-apk
