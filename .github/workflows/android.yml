@@ -42,21 +42,27 @@ jobs:
 
     - name: Install Android SDK + cmdline-tools
       run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools/latest
-        cd $HOME/android-sdk/
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
 
+        # Remove any preinstalled cmdline-tools to avoid conflicts
+        rm -rf cmdline-tools
+
+        # Download latest commandline tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-        unzip tools.zip
-        mv cmdline-tools/* cmdline-tools/latest/
-        rm tools.zip
 
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+        mkdir -p cmdline-tools
+        unzip tools.zip -d cmdline-tools-temp
+        mv cmdline-tools-temp/cmdline-tools cmdline-tools/latest
+        rm -rf cmdline-tools-temp tools.zip
+
+        yes | cmdline-tools/latest/bin/sdkmanager --licenses
+        cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
 
     - name: Set ENV paths
       run: |
-        echo "export ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "export PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+        echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
     - name: Build APK with Buildozer
       run: |
