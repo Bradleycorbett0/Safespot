@@ -29,16 +29,20 @@ jobs:
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Install Android SDK manually
+    - name: Install Android SDK
       run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
 
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd.zip
-        unzip cmd.zip -d cmdline-tools
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ || true
+        # Download commandline tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
+        unzip tools.zip -d ./temp
 
+        # Correct layout
+        mkdir -p latest
+        mv temp/* latest/
+
+        # Install tools
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools"
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "build-tools;33.0.2"
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
@@ -46,8 +50,7 @@ jobs:
     - name: Set ENV paths
       run: |
         echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "ANDROIDNDK=$HOME/android-sdk/ndk-bundle" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/android-sdk/build-tools/33.0.2:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.2" >> $GITHUB_ENV
 
     - name: Build APK
       run: |
