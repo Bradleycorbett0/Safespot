@@ -14,14 +14,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install dependencies
+    - name: Install Linux + Python dependencies
       run: |
         sudo apt update
         sudo apt install -y unzip zip git openjdk-17-jdk python3-pip
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Prepare Android SDK & NDK folders
+    - name: Prepare Android folders
       run: |
         mkdir -p $HOME/android/sdk
         mkdir -p $HOME/android/ndk
@@ -29,15 +29,16 @@ jobs:
     - name: Install Android NDK (r25b)
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-        unzip ndk.zip -d $HOME/android/ndk
+        unzip -q ndk.zip -d $HOME/android/ndk
 
-    - name: Install Android commandline tools
+    - name: Install Android commandline tools (SAFE VERSION)
       run: |
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmd.zip
-        unzip cmd.zip -d $HOME/android/sdk/cmdline-tools
-        mv $HOME/android/sdk/cmdline-tools/cmdline-tools $HOME/android/sdk/cmdline-tools/latest
+        unzip -q cmd.zip -d $HOME/android/sdk/cmdline-tools
+        mkdir -p $HOME/android/sdk/cmdline-tools/latest
+        mv $HOME/android/sdk/cmdline-tools/cmdline-tools/* $HOME/android/sdk/cmdline-tools/latest/
 
-    - name: Install Android packages
+    - name: Install Android SDK packages
       run: |
         yes | $HOME/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android/sdk \
           "platform-tools" \
