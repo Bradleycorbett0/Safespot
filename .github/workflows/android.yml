@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -18,38 +19,35 @@ jobs:
         sudo apt update
         sudo apt install -y git zip unzip python3-pip openjdk-17-jdk
         pip install --upgrade pip
-        pip install buildozer cython
+        pip install cython buildozer
 
-    - name: Create Android SDK/NDK folders
+    - name: Create Android SDK/NDK directories
       run: |
-        mkdir -p $HOME/android
-        mkdir -p $HOME/android/ndk
         mkdir -p $HOME/android/sdk
+        mkdir -p $HOME/android/ndk
 
-    - name: Download Android NDK r25b
+    - name: Install Android NDK r25b
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
         unzip ndk.zip -d $HOME/android/ndk
-        mv $HOME/android/ndk/android-ndk-r25b $HOME/android/ndk/ndk
 
-    - name: Download Android cmdline-tools
+    - name: Install Android commandline tools (NO MOVING FOLDERS)
       run: |
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmd.zip
-        unzip cmd.zip -d $HOME/android/sdk
-        mkdir -p $HOME/android/sdk/cmdline-tools/latest
-        mv $HOME/android/sdk/cmdline-tools/* $HOME/android/sdk/cmdline-tools/latest/
+        unzip cmd.zip -d $HOME/android/sdk/cmdline-tools
+        mv $HOME/android/sdk/cmdline-tools/cmdline-tools $HOME/android/sdk/cmdline-tools/latest
 
-    - name: Install SDK packages
+    - name: Install platform-tools and build-tools
       run: |
         yes | $HOME/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android/sdk \
           "platform-tools" \
           "platforms;android-33" \
           "build-tools;33.0.2"
 
-    - name: Set environment
+    - name: Set environment variables
       run: |
         echo "ANDROIDSDK=$HOME/android/sdk" >> $GITHUB_ENV
-        echo "ANDROIDNDK=$HOME/android/ndk/ndk" >> $GITHUB_ENV
+        echo "ANDROIDNDK=$HOME/android/ndk/android-ndk-r25b" >> $GITHUB_ENV
         echo "PATH=$HOME/android/sdk/platform-tools:$HOME/android/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
     - name: Build APK
