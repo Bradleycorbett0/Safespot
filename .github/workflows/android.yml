@@ -1,9 +1,9 @@
 name: Build APK
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -14,30 +14,30 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install system deps
+    - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip python3-pip openjdk-17-jdk
+        sudo apt install -y unzip zip git openjdk-17-jdk python3-pip
         pip install --upgrade pip
         pip install cython buildozer
 
-    - name: Create Android SDK/NDK directories
+    - name: Prepare Android SDK & NDK folders
       run: |
         mkdir -p $HOME/android/sdk
         mkdir -p $HOME/android/ndk
 
-    - name: Install Android NDK r25b
+    - name: Install Android NDK (r25b)
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
         unzip ndk.zip -d $HOME/android/ndk
 
-    - name: Install Android commandline tools (NO MOVING FOLDERS)
+    - name: Install Android commandline tools
       run: |
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmd.zip
         unzip cmd.zip -d $HOME/android/sdk/cmdline-tools
         mv $HOME/android/sdk/cmdline-tools/cmdline-tools $HOME/android/sdk/cmdline-tools/latest
 
-    - name: Install platform-tools and build-tools
+    - name: Install Android packages
       run: |
         yes | $HOME/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android/sdk \
           "platform-tools" \
@@ -51,10 +51,9 @@ jobs:
         echo "PATH=$HOME/android/sdk/platform-tools:$HOME/android/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
     - name: Build APK
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: safespot-apk
