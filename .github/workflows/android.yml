@@ -14,7 +14,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Linux + Python deps
+    - name: Clean previous Buildozer directories
+      run: |
+        rm -rf .buildozer
+        rm -rf bin
+        mkdir -p bin
+
+    - name: Install Linux + Kivy dependencies
       run: |
         sudo apt update
         sudo apt install -y \
@@ -29,7 +35,7 @@ jobs:
         mkdir -p $HOME/android/sdk
         mkdir -p $HOME/android/ndk
 
-    - name: Install Android NDK (r25b)
+    - name: Install Android NDK r25b
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
         unzip ndk.zip -d $HOME/android/ndk
@@ -54,7 +60,8 @@ jobs:
         echo "PATH=$HOME/android/sdk/platform-tools:$HOME/android/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
     - name: Build APK
-      run: buildozer android debug
+      run: |
+        buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
