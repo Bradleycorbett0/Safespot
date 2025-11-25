@@ -28,27 +28,30 @@ android.build_tools_version = 33.0.2
 # Architectures
 android.archs = armeabi-v7a, arm64-v8a
 
-# NDK (required!)
-android.ndk = 25b
-android.ndk_path = /usr/local/android-ndk-r25b
+# ------------------------------
+# CRITICAL FIX FOR GITHUB BUILDS
+# ------------------------------
+android.sdk_path = $ANDROIDSDK
+android.ndk_path = $ANDROIDNDK
 
-# Java version
-android.gradle_dependencies = 
+# NDK version
+android.ndk = 25b
+
+# Java / Gradle
 android.gradle_version = 7.5
 
-# Enable backup
+# Backup
 android.allow_backup = True
 
 # Build formats
 android.release_artifact = aab
 android.debug_artifact = apk
 
-# Icon + presplash (optional)
+# Icons (optional)
 # icon.filename = icon.png
 # presplash.filename = presplash.png
 
 
 [buildozer]
-
 log_level = 2
 warn_on_root = 1
