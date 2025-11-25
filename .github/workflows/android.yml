@@ -3,7 +3,7 @@ name: Build APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
@@ -14,14 +14,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install Linux + Python dependencies
+    - name: Install Linux + Python deps
       run: |
         sudo apt update
-        sudo apt install -y unzip zip git openjdk-17-jdk python3-pip
-        pip install --upgrade pip
-        pip install cython buildozer
+        sudo apt install -y \
+          zip unzip git openjdk-17-jdk python3-pip \
+          libpython3-dev libssl-dev libffi-dev \
+          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+          libgles2-mesa-dev libgl1-mesa-dev
+        pip install --upgrade pip cython buildozer
 
-    - name: Prepare Android folders
+    - name: Prepare Android SDK folders
       run: |
         mkdir -p $HOME/android/sdk
         mkdir -p $HOME/android/ndk
@@ -29,23 +32,22 @@ jobs:
     - name: Install Android NDK (r25b)
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-        unzip -q ndk.zip -d $HOME/android/ndk
+        unzip ndk.zip -d $HOME/android/ndk
 
-    - name: Install Android commandline tools (SAFE VERSION)
+    - name: Install Android cmdline-tools
       run: |
         wget https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip -O cmd.zip
-        unzip -q cmd.zip -d $HOME/android/sdk/cmdline-tools
-        mkdir -p $HOME/android/sdk/cmdline-tools/latest
-        mv $HOME/android/sdk/cmdline-tools/cmdline-tools/* $HOME/android/sdk/cmdline-tools/latest/
+        unzip cmd.zip -d $HOME/android/sdk/cmdline-tools
+        mv $HOME/android/sdk/cmdline-tools/cmdline-tools $HOME/android/sdk/cmdline-tools/latest
 
-    - name: Install Android SDK packages
+    - name: Install Android packages
       run: |
         yes | $HOME/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android/sdk \
           "platform-tools" \
           "platforms;android-33" \
           "build-tools;33.0.2"
 
-    - name: Set environment variables
+    - name: Set environment
       run: |
         echo "ANDROIDSDK=$HOME/android/sdk" >> $GITHUB_ENV
         echo "ANDROIDNDK=$HOME/android/ndk/android-ndk-r25b" >> $GITHUB_ENV
