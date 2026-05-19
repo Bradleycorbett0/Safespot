@@ -1,70 +1,128 @@
-name: Build APK
+name: Build SafeSpot APK
 
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
+    env:
+      SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
+      NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
+      ANDROID_API: "33"
+      ANDROID_BUILD_TOOLS: "33.0.2"
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Checkout your code
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    # Install system packages
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y unzip zip git openjdk-17-jdk python3-pip
-        pip install --upgrade pip
-        pip install cython buildozer
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip tar wget curl \
+            openjdk-17-jdk \
+            build-essential \
+            libffi-dev libssl-dev \
+            autoconf automake libtool pkg-config \
+            zlib1g-dev libncurses6
 
-    # Create SDK & NDK directories
-    - name: Prepare Android SDK & NDK folders
-      run: |
-        mkdir -p $HOME/android/sdk
-        mkdir -p $HOME/android/ndk
+      - name: Clean old Buildozer files
+        run: |
+          rm -rf ~/.buildozer
+          rm -rf .buildozer
+          mkdir -p "$SDK_ROOT"
+          mkdir -p "/home/runner/.buildozer/android/platform"
 
-    # Install Android NDK r25b
-    - name: Install Android NDK (r25b)
-      run: |
-        wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-        unzip ndk.zip -d $HOME/android/ndk
+      - name: Install Android SDK command tools
+        run: |
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline.zip
+          unzip -q cmdline.zip -d /tmp/android-tools
+          rm cmdline.zip
 
-    # Install Android commandline tools (safe version)
-    - name: Install Android commandline tools
-      run: |
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmd.zip
-        mkdir -p $HOME/android/sdk/cmdline-tools
-        unzip cmd.zip -d $HOME/android/sdk/cmdline-tools
-        mv $HOME/android/sdk/cmdline-tools/cmdline-tools $HOME/android/sdk/cmdline-tools/latest
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          mv /tmp/android-tools/cmdline-tools "$SDK_ROOT/cmdline-tools/latest"
 
-    # Install platform tools + build-tools 33.0.2
-    - name: Install Android packages
-      run: |
-        yes | $HOME/android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android/sdk \
-          "platform-tools" \
-          "platforms;android-33" \
-          "build-tools;33.0.2"
+          mkdir -p "$SDK_ROOT/tools/bin"
+          cat > "$SDK_ROOT/tools/bin/sdkmanager" <<EOF
+          #!/bin/bash
+          exec "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "\$@"
+          EOF
+          chmod +x "$SDK_ROOT/tools/bin/sdkmanager"
 
-    # Export environment variables (Buildozer needs these)
-    - name: Set environment variables
-      run: |
-        echo "ANDROIDSDK=$HOME/android/sdk" >> $GITHUB_ENV
-        echo "ANDROIDNDK=$HOME/android/ndk/android-ndk-r25b" >> $GITHUB_ENV
-        echo "PATH=$HOME/android/sdk/platform-tools:$HOME/android/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+      - name: Set environment paths
+        run: |
+          echo "JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/temurin-17-jdk-amd64/bin" >> $GITHUB_PATH
 
-    # Build the APK
-    - name: Build APK
-      run: buildozer android debug
+          echo "ANDROID_HOME=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROIDSDK=$SDK_ROOT" >> $GITHUB_ENV
 
-    # Upload resulting APK
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: safespot-apk
-        path: bin/*.apk
+          echo "ANDROID_NDK_HOME=$NDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROIDNDK=$NDK_ROOT" >> $GITHUB_ENV
+
+          echo "$SDK_ROOT/tools/bin" >> $GITHUB_PATH
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS" >> $GITHUB_PATH
+
+      - name: Accept Android licenses
+        run: |
+          mkdir -p "$SDK_ROOT/licenses"
+          yes | "$SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$SDK_ROOT" --licenses || true
+
+      - name: Install Android SDK packages
+        run: |
+          "$SDK_ROOT/tools/bin/sdkmanager" --sdk_root="$SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}"
+
+      - name: Install Android NDK r25b manually
+        run: |
+          cd /home/runner/.buildozer/android/platform
+          wget -q --show-progress https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
+          unzip -q ndk.zip
+          rm ndk.zip
+          test -d "$NDK_ROOT"
+
+      - name: Verify Android tools
+        run: |
+          ls -l "$SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS/aidl"
+          ls -l "$NDK_ROOT/ndk-build"
+
+      - name: Install Buildozer
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip setuptools wheel
+          pip install cython buildozer
+
+      - name: Build APK
+        run: |
+          source venv/bin/activate
+          export ANDROID_HOME="$SDK_ROOT"
+          export ANDROID_SDK_ROOT="$SDK_ROOT"
+          export ANDROIDSDK="$SDK_ROOT"
+          export ANDROID_NDK_HOME="$NDK_ROOT"
+          export ANDROIDNDK="$NDK_ROOT"
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SafeSpot-APK
+          path: bin/*.apk
