@@ -21,9 +21,6 @@ android.build_tools_version = 33.0.2
 
 android.archs = armeabi-v7a, arm64-v8a
 
-# IMPORTANT — MATCHES GITHUB BUILD
-android.sdk_path = $ANDROIDSDK
-android.ndk_path = $ANDROIDNDK
 android.ndk = 25b
 
 android.allow_backup = True
