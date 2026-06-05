@@ -50,6 +50,17 @@ jobs:
           python -m pip install cython==0.29.36
           python -m pip install buildozer==1.5.0
 
+      - name: Setup Android SDK
+        run: |
+          mkdir -p ~/.buildozer/android/platform
+          cd ~/.buildozer/android/platform
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools-linux-9477386_latest.zip
+          rm commandlinetools-linux-9477386_latest.zip
+          mkdir -p android-sdk
+          mv cmdline-tools android-sdk/cmdline-tools
+          yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=android-sdk "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+
       - name: Show Buildozer config
         run: |
           cat buildozer.spec
