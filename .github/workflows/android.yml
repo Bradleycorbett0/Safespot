@@ -39,8 +39,8 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 33
-          build-tools-version: 33.0.2
+          packages: 'platforms;android-33 build-tools;33.0.2 platform-tools ndk;25.2.9519653'
+          accept-android-sdk-licenses: true
 
       - name: Hard clean old build
         run: |
@@ -63,8 +63,6 @@ jobs:
           grep -n "p4a.branch" buildozer.spec || true
 
       - name: Build APK
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
         run: |
           buildozer android debug
 
