@@ -57,9 +57,10 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -q commandlinetools-linux-9477386_latest.zip
           rm commandlinetools-linux-9477386_latest.zip
-          mkdir -p android-sdk
-          mv cmdline-tools android-sdk/cmdline-tools
-          yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=android-sdk "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools/* android-sdk/cmdline-tools/ || true
+          export ANDROID_SDK_ROOT=~/.buildozer/android/platform/android-sdk
+          yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-33" "build-tools;33.0.2" "platform-tools"
 
       - name: Show Buildozer config
         run: |
@@ -68,6 +69,8 @@ jobs:
           grep -n "p4a.branch" buildozer.spec || true
 
       - name: Build APK
+        env:
+          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
         run: |
           buildozer android debug
 
